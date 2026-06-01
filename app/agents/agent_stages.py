@@ -1,0 +1,8 @@
+STAGE_PARSED = "parsed"
+STAGE_CLAUSES_EXTRACTED = "clauses_extracted"
+STAGE_RISKS_ANALYZED = "risks_analyzed"
+STAGE_POLICY_CHECKED = "policy_checked"
+STAGE_HUMAN_REVIEWED = "human_reviewed"
+STAGE_REVIEW_META = "review_meta"
+STAGE_QA_PASSED = "qa_passed"
+STAGE_FAILED = "failed"

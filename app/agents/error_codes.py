@@ -1,0 +1,5 @@
+ERROR_CATEGORY_SYSTEM = "system_error"
+ERROR_CATEGORY_VALIDATION = "validation_error"
+ERROR_CATEGORY_AGENT_TIMEOUT = "agent_timeout"
+ERROR_CATEGORY_LLM = "llm_error"
+ERROR_CATEGORY_RULE_ENGINE = "rule_engine_error"

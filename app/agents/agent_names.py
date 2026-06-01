@@ -1,0 +1,7 @@
+SUPERVISOR_AGENT_NAME = "Supervisor Agent"
+CLAUSE_EXTRACTION_AGENT_NAME = "Clause Extraction Agent"
+RISK_ANALYSIS_AGENT_NAME = "Risk Analysis Agent"
+POLICY_CHECK_AGENT_NAME = "Policy Check Agent"
+HUMAN_REVIEW_AGENT_NAME = "Human Review Agent"
+QA_AGENT_NAME = "QA Agent"
+REVIEW_SERVICE_NAME = "Review Service"

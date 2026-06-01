@@ -1,0 +1,4 @@
+AGENT_STATE_PENDING = "pending"
+AGENT_STATE_ACTIVE = "active"
+AGENT_STATE_DONE = "done"
+AGENT_STATE_FAILED = "failed"
