@@ -14,8 +14,8 @@ from app.agents.agent_stages import (
 )
 from app.agents.audit_log import now_info
 from app.agents.review_context import ReviewContext
-from app.agents.review_types import AuditEntryDict
 from app.agents.review_status import REVIEW_STATUS_SUCCESS
+from app.agents.review_types import AuditEntryDict
 
 AGENT_NAME = QA_AGENT_NAME
 
@@ -27,11 +27,13 @@ def run_qa_agent(context: ReviewContext) -> ReviewContext:
     taskId = context.get("taskId", "unknown")
     policy_checks = context.get("policyChecks", [])
     extracted_clauses = context.get("extractedClauses", {})
+
     level = context.get("level", "none")
     status = context.get("status", REVIEW_STATUS_SUCCESS)
     failed_rules = [check for check in policy_checks if check["status"] == "fail"]
     extracted_count = sum(1 for value in extracted_clauses.values() if value)
-
+    clause_extraction_source = context.get("clauseExtractionSource", "unknown")
+    clause_extraction_error = context.get("clauseExtractionError")
     audit_log: list[AuditEntryDict] = [
         {
             "taskId": taskId,
@@ -45,7 +47,15 @@ def run_qa_agent(context: ReviewContext) -> ReviewContext:
             "timestamp": now_info(),
             "agent": CLAUSE_EXTRACTION_AGENT_NAME,
             "stage": STAGE_CLAUSES_EXTRACTED,
-            "detail": f"完成关键条款初步扫描，提取到 {extracted_count} 类条款线索。",
+            "detail": (
+                f"完成关键条款初步扫描，提取到 {extracted_count} 类条款线索，"
+                f"来源为 {clause_extraction_source}。"
+                + (
+                    f"LLM fallback 原因：{clause_extraction_error}"
+                    if clause_extraction_error
+                    else ""
+                )
+            ),
         },
         {
             "taskId": taskId,

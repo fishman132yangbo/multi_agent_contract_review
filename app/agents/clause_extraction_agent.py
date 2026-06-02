@@ -39,6 +39,9 @@ def normalize_extracted_clauses(raw: dict[str, object]) -> ExtractedClauses:
         "liability": raw.get("liability")
         if isinstance(raw.get("liability"), str)
         else None,
+        "confidentiality": raw.get("confidentiality")
+        if isinstance(raw.get("confidentiality"), str)
+        else None,
         "disputeResolution": raw.get("disputeResolution")
         if isinstance(raw.get("disputeResolution"), str)
         else None,
@@ -55,9 +58,10 @@ def run_clause_extraction_agent(context: ReviewContext) -> ReviewContext:
             build_clause_extraction_user_prompt(contract_text),
         )
         context["extractedClauses"] = normalize_extracted_clauses(llm_result)
+        context["clauseExtractionSource"] = "llm"
         return context
-    except Exception:
-        pass
+    except Exception as e:
+        context["clauseExtractionError"] = str(e)
     extracted_clauses: ExtractedClauses = {
         "payment": find_clause(
             contract_text, ["付款", "支付", "合同金额", "人民币", "元"]
@@ -94,10 +98,14 @@ def run_clause_extraction_agent(context: ReviewContext) -> ReviewContext:
                 "赔偿上限",
             ],
         ),
+        "confidentiality": find_clause(
+            contract_text,
+            ["保密", "保密义务", "保密期限", "商业秘密", "秘密信息", "不得披露"],
+        ),
         "disputeResolution": find_clause(
             contract_text, ["争议解决", "仲裁", "法院", "管辖", "诉讼"]
         ),
     }
     context["extractedClauses"] = extracted_clauses
-
+    context["clauseExtractionSource"] = "keyword"
     return context

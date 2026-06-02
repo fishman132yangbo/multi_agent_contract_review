@@ -17,7 +17,9 @@ class ReviewContext(TypedDict, total=False):
     contractText: str
     activeAgent: str
     taskId: str
+    clauseExtractionSource: str
     extractedClauses: ExtractedClauses
+    clauseExtractionError: str
     risks: list[RiskDict]
     policyChecks: list[PolicyCheckDict]
     humanReviewReasons: list[HumanReviewReasonDict]

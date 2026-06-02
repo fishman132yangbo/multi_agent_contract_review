@@ -49,11 +49,22 @@ def generate_json(system_prompt: str, user_prompt: str) -> dict[str, Any]:
     text = generate_text(system_prompt, user_prompt)
     try:
         parsed = json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise LLMResponseParseError(
-            f"Failed to parse LLM response as JSON: {exc}"
-        ) from exc
+    except json.JSONDecodeError:
+        try:
+            parsed = json.loads(extract_json_object(text))
+        except json.JSONDecodeError as e:
+            raise LLMResponseParseError(
+                f"Failed to parse LLM response as JSON: {e}"
+            ) from e
 
     if not isinstance(parsed, dict):
         raise LLMResponseParseError("LLM response is not a JSON object")
     return parsed
+
+
+def extract_json_object(text: str) -> str:
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or start >= end:
+        raise LLMResponseParseError("No JSON object found in LLM response")
+    return text[start : end + 1]

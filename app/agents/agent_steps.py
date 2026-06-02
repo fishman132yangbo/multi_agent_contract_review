@@ -32,7 +32,7 @@ AGENT_STEP_DEFINITIONS = [
     {
         "name": CLAUSE_EXTRACTION_AGENT_NAME,
         "stage": STAGE_CLAUSES_EXTRACTED,
-        "description": "提取付款、验收、知识产权、终止、责任和争议解决条款线索。",
+        "description": "提取付款、验收、知识产权、终止、责任、保密和争议解决条款线索。",
     },
     {
         "name": RISK_ANALYSIS_AGENT_NAME,

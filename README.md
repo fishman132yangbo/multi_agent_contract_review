@@ -2,9 +2,9 @@
 
 合同审查后端服务，基于 FastAPI 实现。
 
-当前版本使用规则库和多 Agent 流程模拟合同初筛，包括：
+当前版本使用规则库、多 Agent 流程和可选 LLM 条款抽取完成合同初筛，包括：
 
-- Clause Extraction Agent：提取关键条款线索
+- Clause Extraction Agent：优先调用 LLM 提取关键条款原文片段，失败时回退到关键词抽取
 - Risk Analysis Agent：根据规则库识别风险
 - Policy Check Agent：生成规则检查结果
 - Human Review Agent：判断是否需要人工复核
@@ -42,6 +42,24 @@ uv run uvicorn app.main:app --reload
 ```text
 http://127.0.0.1:8000
 ```
+
+## LLM 配置
+
+后端使用 OpenAI-compatible SDK 调用 DeepSeek。复制 `.env.example` 为 `.env` 后填入密钥：
+
+```bash
+cp .env.example .env
+```
+
+```env
+LLM_PROVIDER=deepseek
+LLM_API_KEY=你的 DeepSeek API Key
+LLM_MODEL=deepseek-v4-flash
+LLM_BASE_URL=https://api.deepseek.com
+LLM_TIMEOUT_SECONDS=30
+```
+
+如果未配置 `LLM_API_KEY`，或 LLM 调用失败，Clause Extraction Agent 会自动回退到关键词抽取，接口仍会返回审查结果。审计日志中会记录条款抽取来源。
 
 ## 接口
 
@@ -91,5 +109,5 @@ POST /contracts/review
 不跑完整测试时，可以先做轻量检查：
 
 ```bash
-env UV_CACHE_DIR=/private/tmp/uv-cache uv run python -m compileall app
+make check
 ```

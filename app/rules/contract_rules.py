@@ -122,6 +122,7 @@ def check_payment_term_risk(
     extracted_clauses: ExtractedClauses | None = None,
 ) -> RuleRiskDict | None:
     payment_text = extracted_clauses.get("payment") if extracted_clauses else None
+    text_to_check = payment_text or contract_text
     payment_evidence = payment_text or extract_evidence_snippet(
         contract_text, PAYMENT_KEYWORDS
     )
@@ -129,7 +130,7 @@ def check_payment_term_risk(
     if not payment_evidence:
         return None
 
-    if has_any(contract_text, PAYMENT_TERM_KEYWORDS):
+    if has_any(text_to_check, PAYMENT_TERM_KEYWORDS):
         return None
 
     return {
@@ -165,6 +166,8 @@ def check_breach_liability_risk(
     contract_text: str,
     extracted_clauses: ExtractedClauses | None = None,
 ) -> RuleRiskDict | None:
+    liability_text = extracted_clauses.get("liability") if extracted_clauses else None
+    text_to_check = liability_text or contract_text
     obligation_evidence = extract_evidence_snippet(
         contract_text, BREACH_OBLIGATION_KEYWORDS
     )
@@ -172,7 +175,7 @@ def check_breach_liability_risk(
     if not obligation_evidence:
         return None
 
-    if has_any(contract_text, BREACH_LIABILITY_KEYWORDS):
+    if has_any(text_to_check, BREACH_LIABILITY_KEYWORDS):
         return None
 
     return {
@@ -264,9 +267,15 @@ def check_confidentiality_risk(
     contract_text: str,
     extracted_clauses: ExtractedClauses | None = None,
 ) -> RuleRiskDict | None:
+    confidentiality_text = (
+        extracted_clauses.get("confidentiality") if extracted_clauses else None
+    )
     sensitive_evidence = extract_evidence_snippet(contract_text, DELIVERABLE_KEYWORDS)
 
     if not sensitive_evidence:
+        return None
+
+    if confidentiality_text:
         return None
 
     if has_any(contract_text, CONFIDENTIALITY_KEYWORDS):

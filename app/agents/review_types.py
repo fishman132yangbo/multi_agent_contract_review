@@ -9,6 +9,7 @@ class ExtractedClauses(TypedDict):
     intellectualProperty: str | None
     termination: str | None
     liability: str | None
+    confidentiality: str | None
     disputeResolution: str | None
 
 
