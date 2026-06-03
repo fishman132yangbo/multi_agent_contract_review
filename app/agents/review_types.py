@@ -13,6 +13,14 @@ class ExtractedClauses(TypedDict):
     disputeResolution: str | None
 
 
+class HumanApprovalDict(TypedDict):
+    status: str
+    action: str | None
+    reviewer: str | None
+    comment: str | None
+    decidedAt: str | None
+
+
 class RuleRiskDict(TypedDict):
     ruleId: str
     level: RiskLevel

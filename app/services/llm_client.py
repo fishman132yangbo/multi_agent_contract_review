@@ -29,16 +29,22 @@ def get_llm_client() -> OpenAI:
     )
 
 
-def generate_text(system_prompt: str, user_prompt: str) -> str:
+def generate_text(system_prompt: str, user_prompt: str, response_format: dict[str,str] | None = None) -> str:
     llm_client = get_llm_client()
     settings = get_settings()
-    response = llm_client.chat.completions.create(
-        model=settings.llm_model,
-        messages=[
+    request = {
+        "model":settings.llm_model,
+        "messages":[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-    )
+        "temperature":settings.llm_temperature,
+        "top_p":settings.llm_top_p
+    }
+    if response_format:
+        request["response_format"] = response_format
+
+    response = llm_client.chat.completions.create(**request)
     content = response.choices[0].message.content
     if not content:
         raise RuntimeError("LLM response does not contain content")
@@ -46,7 +52,9 @@ def generate_text(system_prompt: str, user_prompt: str) -> str:
 
 
 def generate_json(system_prompt: str, user_prompt: str) -> dict[str, Any]:
-    text = generate_text(system_prompt, user_prompt)
+    settings = get_settings()
+    response_format = {"type": "json_object"} if settings.llm_json_response_format else None
+    text = generate_text(system_prompt, user_prompt, response_format=response_format)
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:

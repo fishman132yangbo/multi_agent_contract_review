@@ -104,6 +104,33 @@ POST /contracts/review
 - `humanReviewReasons`
 - `auditLog`
 
+### Contract Review Upload
+
+```http
+POST /contracts/review/upload
+```
+
+用于上传合同文件并直接触发审查。请求类型为：
+
+```text
+multipart/form-data
+```
+
+字段：
+
+```text
+file: .txt / .pdf / .docx 合同文件
+```
+
+解析成功后，后端会从文件中提取合同文本，并复用现有多 Agent 审查流程。返回结构与 `/contracts/review` 相同。
+
+常见错误：
+
+| 状态码 | 说明 |
+| --- | --- |
+| 400 | 文件格式不支持 |
+| 422 | 文件可以读取，但未解析出有效文本 |
+
 ## 开发验证
 
 不跑完整测试时，可以先做轻量检查：

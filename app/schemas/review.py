@@ -2,11 +2,31 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-ReviewLevel = Literal["none", "recommended", "required"]
+ReviewLevel = Literal[
+    "none",
+    "recommended",
+    "required",
+]
+ReviewStatus = Literal[
+    "success",
+    "failed",
+    "running",
+    "awaiting_human_review",
+    "approved",
+    "changes_requested",
+    "rejected",
+]
+ApprovalAction = Literal["approve", "request_changes", "reject"]
+HumanApprovalStatus = Literal[
+    "not_required",
+    "pending",
+    "approved",
+    "changes_requested",
+    "rejected",
+]
 AgentState = Literal["pending", "active", "done", "failed"]
 RiskLevel = Literal["low", "medium", "high"]
 PolicyStatus = Literal["pass", "fail", "needs_review"]
-ReviewStatus = Literal["success", "failed", "running"]
 
 
 class ReviewRequest(BaseModel):
@@ -58,6 +78,20 @@ class AuditEntry(BaseModel):
     detail: str
 
 
+class HumanApproval(BaseModel):
+    status: HumanApprovalStatus
+    action: ApprovalAction | None = None
+    reviewer: str | None = None
+    comment: str | None = None
+    decidedAt: str | None = None
+
+
+class ApprovalRequest(BaseModel):
+    action: ApprovalAction
+    reviewer: str = Field(..., min_length=1)
+    comment: str | None = None
+
+
 class ReviewResponse(BaseModel):
     taskId: str
     status: ReviewStatus
@@ -68,4 +102,5 @@ class ReviewResponse(BaseModel):
     policyChecks: list[PolicyCheck]
     risks: list[RiskItem]
     humanReviewReasons: list[HumanReviewReason]
+    humanApproval: HumanApproval | None = None
     auditLog: list[AuditEntry]

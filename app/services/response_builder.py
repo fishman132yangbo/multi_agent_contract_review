@@ -19,6 +19,7 @@ def build_review_response(context: ReviewContext) -> ReviewResponse:
         summary=context["summary"],
         agentSteps=context["agentSteps"],
         policyChecks=context["policyChecks"],
+        humanApproval=context["humanApproval"],
         risks=context["risks"],
         humanReviewReasons=context["humanReviewReasons"],
         auditLog=context["auditLog"],

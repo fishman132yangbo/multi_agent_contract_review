@@ -1,4 +1,6 @@
 from app.main import app
+from app.services.review_task_store import save_task
+from app.services.response_builder import build_error_review_response
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
@@ -35,3 +37,53 @@ def test_review_contract_rejects_empty_text():
     response = client.post("/contracts/review", json={"contract_text": ""})
 
     assert response.status_code == 422
+
+
+def test_error_review_response_allows_required_review_level():
+    response = build_error_review_response(
+        {
+            "taskId": "review-test",
+            "error": "合同审查失败",
+            "failedAgent": "Review Service",
+            "failedStage": "review_meta",
+            "agentSteps": [],
+        }
+    )
+
+    assert response.status == "failed"
+    assert response.level == "required"
+
+
+def test_approval_returns_conflict_when_task_is_not_awaiting_human_review():
+    task_id = "review-not-awaiting-human"
+    save_task(
+        {
+            "taskId": task_id,
+            "status": "success",
+            "score": 95,
+            "level": "none",
+            "summary": "合同风险较低，无需人工复核。",
+            "agentSteps": [],
+            "policyChecks": [],
+            "risks": [],
+            "humanReviewReasons": [],
+            "humanApproval": {
+                "status": "not_required",
+                "action": None,
+                "reviewer": None,
+                "comment": None,
+                "decidedAt": None,
+            },
+            "auditLog": [],
+        }
+    )
+
+    response = client.post(
+        f"/contracts/review/{task_id}/approval",
+        json={"action": "approve", "reviewer": "boyang"},
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "detail": f"Task with id {task_id} is not awaiting human review"
+    }

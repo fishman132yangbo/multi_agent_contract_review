@@ -52,6 +52,27 @@ PAYMENT_TERM_KEYWORDS = [
 ]
 ACCEPTANCE_KEYWORDS = ["验收标准", "验收流程", "验收期限"]
 DELIVERABLE_KEYWORDS = ["软件", "系统", "源代码", "交付成果", "开发", "技术文档"]
+IP_SUBJECT_KEYWORDS = [
+    "软件",
+    "系统",
+    "源代码",
+    "源码",
+    "交付成果",
+    "交付物",
+    "技术文档",
+]
+CONFIDENTIALITY_SUBJECT_KEYWORDS = [
+    "软件",
+    "源代码",
+    "源码",
+    "技术文档",
+    "技术资料",
+    "接口文档",
+    "定制化交付成果",
+    "定制交付成果",
+    "定制化交付物",
+    "定制交付物",
+]
 IP_CLAUSE_KEYWORDS = [
     "知识产权归属",
     "知识产权归甲方",
@@ -64,8 +85,30 @@ TERMINATION_KEYWORDS = [
     "甲方可随时解除",
     "甲方有权单方解除",
     "甲方可单方解除",
+    "甲方有权任意解除",
+    "甲方可任意解除",
+    "甲方有权无理由解除",
+    "甲方可无理由解除",
+    "甲方无需说明理由解除",
 ]
 TERMINATION_PROTECTION_KEYWORDS = ["提前通知", "通知期限", "补偿", "结算", "已完成工作"]
+TERMINATION_REASONABLE_CAUSE_KEYWORDS = [
+    "乙方违约",
+    "严重违约",
+    "逾期交付",
+    "逾期完成",
+    "验收不合格",
+    "未达到标准",
+    "未按约定",
+    "违法违规",
+    "破产",
+    "资不抵债",
+    "不可抗力",
+    "经催告",
+    "催告后",
+    "未改正",
+    "仍未完成",
+]
 LIABILITY_KEYWORDS = ["所有损失", "全部损失", "一切损失", "无限责任", "全额赔偿"]
 LIABILITY_CAP_KEYWORDS = [
     "责任上限",
@@ -94,6 +137,7 @@ CONFIDENTIALITY_KEYWORDS = [
     "未经许可不得",
 ]
 DISPUTE_RESOLUTION_KEYWORDS = ["争议解决", "仲裁", "法院", "管辖", "诉讼"]
+EVIDENCE_BOUNDARIES = "。！？；\n\r"
 
 
 def has_any(text: str, keywords: list[str]) -> bool:
@@ -109,6 +153,24 @@ def extract_evidence_snippet(
         index = text.find(keyword)
         if index == -1:
             continue
+
+        sentence_start = max(
+            text.rfind(boundary, 0, index) for boundary in EVIDENCE_BOUNDARIES
+        )
+        sentence_end_candidates = []
+        for boundary in EVIDENCE_BOUNDARIES:
+            sentence_end = text.find(boundary, index + len(keyword))
+            if sentence_end != -1:
+                sentence_end_candidates.append(sentence_end)
+
+        if sentence_start != -1 or sentence_end_candidates:
+            start = sentence_start + 1 if sentence_start != -1 else 0
+            end = (
+                min(sentence_end_candidates) + 1
+                if sentence_end_candidates
+                else len(text)
+            )
+            return text[start:end].strip()
 
         start = max(index - window, 0)
         end = min(index + len(keyword) + window, len(text))
@@ -192,7 +254,7 @@ def check_ip_ownership_risk(
     extracted_clauses: ExtractedClauses | None = None,
 ) -> RuleRiskDict | None:
 
-    deliverable_evidence = extract_evidence_snippet(contract_text, DELIVERABLE_KEYWORDS)
+    deliverable_evidence = extract_evidence_snippet(contract_text, IP_SUBJECT_KEYWORDS)
     has_ip_clause = has_any(contract_text, IP_CLAUSE_KEYWORDS)
 
     if not deliverable_evidence:
@@ -223,8 +285,12 @@ def check_unilateral_termination_risk(
     text_to_check = termination_text or contract_text
     termination_evidence = extract_evidence_snippet(text_to_check, TERMINATION_KEYWORDS)
     has_protection = has_any(text_to_check, TERMINATION_PROTECTION_KEYWORDS)
+    has_reasonable_cause = has_any(text_to_check, TERMINATION_REASONABLE_CAUSE_KEYWORDS)
 
     if not termination_evidence:
+        return None
+
+    if has_reasonable_cause:
         return None
 
     if has_protection:
@@ -234,7 +300,7 @@ def check_unilateral_termination_risk(
         "ruleId": RULE_TERMINATION,
         "level": LEVEL_HIGH,
         "title": "单方解除权过强",
-        "description": "合同允许甲方单方或随时解除，但未约定通知期限、补偿或已完成工作结算。",
+        "description": "合同允许甲方单方或随时解除，但未约定合理解除原因、通知期限、补偿或已完成工作结算。",
         "evidence": termination_evidence,
     }
 
@@ -270,7 +336,9 @@ def check_confidentiality_risk(
     confidentiality_text = (
         extracted_clauses.get("confidentiality") if extracted_clauses else None
     )
-    sensitive_evidence = extract_evidence_snippet(contract_text, DELIVERABLE_KEYWORDS)
+    sensitive_evidence = extract_evidence_snippet(
+        contract_text, CONFIDENTIALITY_SUBJECT_KEYWORDS
+    )
 
     if not sensitive_evidence:
         return None
@@ -285,7 +353,7 @@ def check_confidentiality_risk(
         "ruleId": RULE_CONFIDENTIALITY,
         "level": LEVEL_MEDIUM,
         "title": "保密条款缺失",
-        "description": "合同涉及软件、源代码、技术文档或交付成果，但未约定保密义务。",
+        "description": "合同涉及软件、源代码、技术文档或定制化交付成果，但未约定保密义务。",
         "evidence": sensitive_evidence,
     }
 

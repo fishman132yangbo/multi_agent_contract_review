@@ -7,10 +7,12 @@ from app.agents.review_types import (
     AgentStepDict,
     AuditEntryDict,
     ExtractedClauses,
+    HumanApprovalDict,
     HumanReviewReasonDict,
     PolicyCheckDict,
     RiskDict,
 )
+
 
 
 class ReviewContext(TypedDict, total=False):
@@ -30,6 +32,7 @@ class ReviewContext(TypedDict, total=False):
     failedStage: str
     status: str
     currentStage: str
+    humanApproval: HumanApprovalDict
     score: int
     level: str
     summary: str

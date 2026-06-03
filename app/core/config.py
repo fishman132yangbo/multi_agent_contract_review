@@ -9,7 +9,9 @@ class Settings(BaseSettings):
     llm_model: str = "deepseek-v4-flash"
     llm_base_url: str = "https://api.deepseek.com"
     llm_timeout_seconds: int = 30
-
+    llm_temperature: float = 0.2
+    llm_top_p: float = 1
+    llm_json_response_format: bool = True
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
