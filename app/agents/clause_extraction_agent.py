@@ -1,12 +1,7 @@
 from app.agents.agent_names import CLAUSE_EXTRACTION_AGENT_NAME
 from app.agents.agent_stages import STAGE_CLAUSES_EXTRACTED
-from app.agents.clause_extraction_prompt import (
-    CLAUSE_EXTRACTION_SYSTEM_PROMPT,
-    build_clause_extraction_user_prompt,
-)
 from app.agents.review_context import ReviewContext
 from app.agents.review_types import ExtractedClauses
-from app.services.llm_client import generate_json
 
 AGENT_NAME = CLAUSE_EXTRACTION_AGENT_NAME
 
@@ -52,16 +47,6 @@ def run_clause_extraction_agent(context: ReviewContext) -> ReviewContext:
     context["activeAgent"] = AGENT_NAME
     context["currentStage"] = STAGE_CLAUSES_EXTRACTED
     contract_text = context["contractText"]
-    try:
-        llm_result = generate_json(
-            CLAUSE_EXTRACTION_SYSTEM_PROMPT,
-            build_clause_extraction_user_prompt(contract_text),
-        )
-        context["extractedClauses"] = normalize_extracted_clauses(llm_result)
-        context["clauseExtractionSource"] = "llm"
-        return context
-    except Exception as e:
-        context["clauseExtractionError"] = str(e)
     extracted_clauses: ExtractedClauses = {
         "payment": find_clause(
             contract_text, ["付款", "支付", "合同金额", "人民币", "元"]
