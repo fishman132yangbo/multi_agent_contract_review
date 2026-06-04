@@ -87,3 +87,45 @@ def test_approval_returns_conflict_when_task_is_not_awaiting_human_review():
     assert response.json() == {
         "detail": f"Task with id {task_id} is not awaiting human review"
     }
+
+
+def test_approval_appends_string_audit_log_detail():
+    task_id = "review-awaiting-human"
+    save_task(
+        {
+            "taskId": task_id,
+            "status": "awaiting_human_review",
+            "score": 72,
+            "level": "required",
+            "summary": "合同需要人工复核。",
+            "agentSteps": [],
+            "policyChecks": [],
+            "risks": [],
+            "humanReviewReasons": [],
+            "humanApproval": {
+                "status": "pending",
+                "action": None,
+                "reviewer": None,
+                "comment": None,
+                "decidedAt": None,
+            },
+            "auditLog": [
+                {
+                    "taskId": task_id,
+                    "timestamp": "2026-06-04 10:00:00 CST",
+                    "agent": "QA Agent",
+                    "stage": "qa_completed",
+                    "detail": "审查流程完成，等待人工审批。",
+                }
+            ],
+        }
+    )
+
+    response = client.post(
+        f"/contracts/review/{task_id}/approval",
+        json={"action": "approve", "reviewer": "哈哈", "comment": "1234"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["auditLog"][-1]["detail"] == "哈哈 提交人工审批结果：approve，备注：1234"

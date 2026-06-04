@@ -109,17 +109,21 @@ def submit_approval(task_id: str, payload: ApprovalRequest) -> ReviewResponse:
         "comment": payload.comment,
         "decidedAt": decided_at,
     }
+    context["summary"] = (
+        f"人工审批结果：{payload.action}。"
+        + (f"审核意见：{payload.comment}" if payload.comment else "")
+        + f"初审结论：{context['summary']}。"
+    )
     context["auditLog"].append(
         {
             "taskId": task_id,
             "timestamp": decided_at,
             "agent": REVIEW_SERVICE_NAME,
             "stage": "human_approval_submitted",
-            "detail": {
-                f"{payload.reviewer} 提交人工审批结果：{payload.action}"
-                + (f"，备注：{payload.comment}" if payload.comment else "")
-            },
+            "detail": f"{payload.reviewer} 提交人工审批结果：{payload.action}"
+            + (f"，备注：{payload.comment}" if payload.comment else ""),
         }
     )
+
     context = save_task(context)
     return build_review_response(context)
